@@ -331,7 +331,7 @@ static ClusterPrePermissions *__sharedInstance;
     denyButtonTitle  = [self titleFor:ClusterTitleTypeDeny fromTitle:denyButtonTitle];
     grantButtonTitle = [self titleFor:ClusterTitleTypeRequest fromTitle:grantButtonTitle];
     
-    AVAuthorizationStatus status = [AVCaptureDevice authorizationStatusForMediaType:[self AVEquivalentMediaType:mediaType]];
+    AVAuthorizationStatus status = [AVCaptureDevice authorizationStatusForMediaType:[ClusterPrePermissions AVEquivalentMediaType:mediaType]];
     if (status == AVAuthorizationStatusNotDetermined) {
         self.avPermissionCompletionHandler = completionHandler;
         self.preAVPermissionAlertView = [[UIAlertView alloc] initWithTitle:requestTitle
@@ -348,6 +348,18 @@ static ClusterPrePermissions *__sharedInstance;
                               ClusterDialogResultNoActionTaken);
         }
     }
+}
+
+
++ (void)requestCameraPermissionsWithHandler:(ClusterPrePermissionRequestHandler)handler {
+	[AVCaptureDevice requestAccessForMediaType:[ClusterPrePermissions AVEquivalentMediaType:ClusterAVAuthorizationTypeCamera]
+							 completionHandler:^(BOOL granted) {
+								 dispatch_async(dispatch_get_main_queue(), ^{
+									 if (handler != nil) {
+										 handler([ClusterPrePermissions cameraPermissionAuthorizationStatus]);
+									 }
+								 });
+							 }];
 }
 
 
@@ -383,7 +395,7 @@ static ClusterPrePermissions *__sharedInstance;
 
 - (void) showActualAVPermissionAlertWithType:(ClusterAVAuthorizationType)mediaType
 {
-    [AVCaptureDevice requestAccessForMediaType:[self AVEquivalentMediaType:mediaType]
+    [AVCaptureDevice requestAccessForMediaType:[ClusterPrePermissions AVEquivalentMediaType:mediaType]
                              completionHandler:^(BOOL granted) {
                                  dispatch_async(dispatch_get_main_queue(), ^{
                                      [self fireAVPermissionCompletionHandlerWithType:mediaType];
@@ -394,7 +406,7 @@ static ClusterPrePermissions *__sharedInstance;
 
 - (void) fireAVPermissionCompletionHandlerWithType:(ClusterAVAuthorizationType)mediaType
 {
-    AVAuthorizationStatus status = [AVCaptureDevice authorizationStatusForMediaType:[self AVEquivalentMediaType:mediaType]];
+    AVAuthorizationStatus status = [AVCaptureDevice authorizationStatusForMediaType:[ClusterPrePermissions AVEquivalentMediaType:mediaType]];
     if (self.avPermissionCompletionHandler) {
         ClusterDialogResult userDialogResult = ClusterDialogResultGranted;
         ClusterDialogResult systemDialogResult = ClusterDialogResultGranted;
@@ -419,7 +431,7 @@ static ClusterPrePermissions *__sharedInstance;
 }
 
 
-- (NSString*)AVEquivalentMediaType:(ClusterAVAuthorizationType)mediaType
++ (NSString*)AVEquivalentMediaType:(ClusterAVAuthorizationType)mediaType
 {
     if (mediaType == ClusterAVAuthorizationTypeCamera) {
         return AVMediaTypeVideo;
@@ -444,7 +456,9 @@ static ClusterPrePermissions *__sharedInstance;
     grantButtonTitle = [self titleFor:ClusterTitleTypeRequest fromTitle:grantButtonTitle];
     
     CLAuthorizationStatus status = [PHPhotoLibrary authorizationStatus];
-    if (status == kCLAuthorizationStatusNotDetermined) {
+	if (status == kCLAuthorizationStatusNotDetermined) {
+		[self showActualPhotoPermissionAlert];
+	} else if (status == kCLAuthorizationStatusRestricted) {
         self.photoPermissionCompletionHandler = completionHandler;
         self.prePhotoPermissionAlertView = [[UIAlertView alloc] initWithTitle:requestTitle
                                                                       message:message
@@ -459,6 +473,15 @@ static ClusterPrePermissions *__sharedInstance;
                               ClusterDialogResultNoActionTaken);
         }
     }
+}
+
+
++ (void)requestPhotoPermissionsWithHandler:(ClusterPrePermissionRequestHandler)handler {
+	[PHPhotoLibrary requestAuthorization: ^(PHAuthorizationStatus status){
+		if (handler != nil) {
+			handler([ClusterPrePermissions photoPermissionAuthorizationStatus]);
+		}
+	}];
 }
 
 

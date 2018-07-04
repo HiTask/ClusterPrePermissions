@@ -128,6 +128,8 @@ typedef void (^ClusterPrePermissionCompletionHandler)(BOOL hasPermission,
                                               ClusterDialogResult userDialogResult,
                                               ClusterDialogResult systemDialogResult);
 
+typedef void (^ClusterPrePermissionRequestHandler)(ClusterAuthorizationStatus status);
+
 + (instancetype) sharedPermissions;
 
 + (ClusterAuthorizationStatus) cameraPermissionAuthorizationStatus;
@@ -151,6 +153,8 @@ typedef void (^ClusterPrePermissionCompletionHandler)(BOOL hasPermission,
                        grantButtonTitle:(NSString *)grantButtonTitle
                       completionHandler:(ClusterPrePermissionCompletionHandler)completionHandler;
 
++ (void)requestCameraPermissionsWithHandler:(ClusterPrePermissionRequestHandler)handler;
+
 - (void) showMicrophonePermissionsWithTitle:(NSString *)requestTitle
                                     message:(NSString *)message
                             denyButtonTitle:(NSString *)denyButtonTitle
@@ -162,6 +166,8 @@ typedef void (^ClusterPrePermissionCompletionHandler)(BOOL hasPermission,
                        denyButtonTitle:(NSString *)denyButtonTitle
                       grantButtonTitle:(NSString *)grantButtonTitle
                      completionHandler:(ClusterPrePermissionCompletionHandler)completionHandler;
+
++ (void)requestPhotoPermissionsWithHandler:(ClusterPrePermissionRequestHandler)handler;
 
 - (void) showContactsPermissionsWithTitle:(NSString *)requestTitle
                                   message:(NSString *)message
